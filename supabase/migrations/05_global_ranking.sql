@@ -74,13 +74,13 @@ BEGIN
       FROM public.profiles p
       LEFT JOIN public.daily_checkins c 
         ON p.id = c.user_id 
-        AND c.date >= v_start_of_week
+        AND c.checkin_date >= v_start_of_week
       WHERE p.show_in_ranking = true AND p.nickname IS NOT NULL
       GROUP BY p.id, p.nickname, p.current_streak
     ),
     ranked AS (
       SELECT 
-        ROW_NUMBER() OVER (ORDER BY checkins_this_week DESC, current_streak DESC, nickname ASC) AS rnk,
+        ROW_NUMBER() OVER (ORDER BY w.checkins_this_week DESC, w.current_streak DESC, w.nickname ASC) AS rnk,
         w.nickname,
         w.current_streak,
         w.checkins_this_week
@@ -95,11 +95,11 @@ BEGIN
     RETURN QUERY
     WITH weekly_counts AS (
       SELECT 
-        user_id, 
-        COUNT(id)::INT AS w_checkins
-      FROM public.daily_checkins
-      WHERE date >= v_start_of_week
-      GROUP BY user_id
+        dc.user_id, 
+        COUNT(dc.id)::INT AS w_checkins
+      FROM public.daily_checkins dc
+      WHERE dc.checkin_date >= v_start_of_week
+      GROUP BY dc.user_id
     ),
     ranked AS (
       SELECT 
@@ -142,14 +142,14 @@ BEGIN
         p.current_streak,
         COUNT(c.id)::INT AS checkins_this_week
       FROM public.profiles p
-      LEFT JOIN public.daily_checkins c ON p.id = c.user_id AND c.date >= v_start_of_week
+      LEFT JOIN public.daily_checkins c ON p.id = c.user_id AND c.checkin_date >= v_start_of_week
       WHERE p.show_in_ranking = true AND p.nickname IS NOT NULL
       GROUP BY p.id, p.nickname, p.current_streak
     ),
     ranked AS (
       SELECT 
         w.id,
-        ROW_NUMBER() OVER (ORDER BY checkins_this_week DESC, current_streak DESC, nickname ASC) AS rnk,
+        ROW_NUMBER() OVER (ORDER BY w.checkins_this_week DESC, w.current_streak DESC, w.nickname ASC) AS rnk,
         w.nickname,
         w.current_streak,
         w.checkins_this_week
@@ -161,10 +161,10 @@ BEGIN
   ELSE
     RETURN QUERY
     WITH weekly_counts AS (
-      SELECT user_id, COUNT(id)::INT AS w_checkins
-      FROM public.daily_checkins
-      WHERE date >= v_start_of_week
-      GROUP BY user_id
+      SELECT dc.user_id, COUNT(dc.id)::INT AS w_checkins
+      FROM public.daily_checkins dc
+      WHERE dc.checkin_date >= v_start_of_week
+      GROUP BY dc.user_id
     ),
     ranked AS (
       SELECT 

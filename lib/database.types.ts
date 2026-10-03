@@ -10,6 +10,16 @@ export type Database = {
           current_streak: number
           longest_streak: number
           created_at: string
+          nickname: string | null
+          show_in_ranking: boolean
+          onboarded: boolean
+          reminder_enabled: boolean
+          reminder_time: string
+          shields: number
+          shields_refilled_month: string
+          light_mode: boolean
+          soft_mode_from: string | null
+          soft_mode_until: string | null
         }
         Insert: {
           id: string
@@ -18,6 +28,13 @@ export type Database = {
           avatar_url?: string | null
           current_streak?: number
           longest_streak?: number
+          nickname?: string | null
+          show_in_ranking?: boolean
+          onboarded?: boolean
+          reminder_enabled?: boolean
+          reminder_time?: string
+          shields?: number
+          shields_refilled_month?: string
         }
         Update: {
           email?: string | null
@@ -25,6 +42,15 @@ export type Database = {
           avatar_url?: string | null
           current_streak?: number
           longest_streak?: number
+          nickname?: string | null
+          show_in_ranking?: boolean
+          onboarded?: boolean
+          reminder_enabled?: boolean
+          reminder_time?: string
+          shields?: number
+          shields_refilled_month?: string
+          light_mode?: boolean
+          // soft_mode_from and soft_mode_until are server-only (protected by trigger)
         }
       }
       goals: {
@@ -33,6 +59,7 @@ export type Database = {
           user_id: string
           title: string
           is_active: boolean
+          days_of_week: number[]
           created_at: string
         }
         Insert: {
@@ -40,11 +67,34 @@ export type Database = {
           user_id: string
           title: string
           is_active?: boolean
+          days_of_week?: number[]
         }
         Update: {
           title?: string
           is_active?: boolean
+          days_of_week?: number[]
         }
+      }
+      goal_versions: {
+        Row: {
+          id: string
+          goal_id: string
+          user_id: string
+          days_of_week: number[]
+          is_active: boolean
+          valid_from: string
+        }
+        Insert: never
+        Update: never
+      }
+      protected_days: {
+        Row: {
+          user_id: string
+          day: string
+          used_at: string
+        }
+        Insert: never
+        Update: never
       }
       goal_completions: {
         Row: {
@@ -143,6 +193,43 @@ export type Database = {
           current_streak: number
           week_checkins: number
         }[]
+      }
+      finish_onboarding: {
+        Args: { p_nickname: string, p_reminder_enabled: boolean, p_reminder_time: string }
+        Returns: void
+      }
+      update_reminder_settings: {
+        Args: { p_enabled: boolean, p_time: string }
+        Returns: void
+      }
+      create_goal: {
+        Args: { p_title: string, p_days: number[] }
+        Returns: string
+      }
+      update_goal: {
+        Args: { p_goal_id: string, p_title?: string, p_days?: number[], p_is_active?: boolean }
+        Returns: void
+      }
+      day_status: {
+        Args: { p_user_id: string, p_date: string }
+        Returns: string
+      }
+      flame_state: {
+        Args: Record<string, never>
+        Returns: {
+          days: number
+          at_risk: boolean
+          recoverable_day: string | null
+          shields: number
+        }[]
+      }
+      use_shield: {
+        Args: Record<string, never>
+        Returns: void
+      }
+      next_shield_refill_date: {
+        Args: Record<string, never>
+        Returns: string
       }
     }
   }
